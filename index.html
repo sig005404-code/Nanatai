@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="大罪3期待度">
+<title>大罪3 期待度</title>
+<style>
+:root{--bg:#f2f2f7;--card:#fff;--tx:#111;--sub:#6b6b70;--ln:#d8d8dc;--ac:#0a84ff;--acbg:#e5f1ff}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--tx:#f2f2f7;--sub:#9a9aa0;--ln:#38383a;--acbg:#0a2c4d}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Hiragino Sans",sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+header{position:sticky;top:0;z-index:5;background:var(--card);padding:calc(env(safe-area-inset-top) + 10px) 16px 12px;border-bottom:1px solid var(--ln)}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+#res{font-size:44px;font-weight:700;line-height:1}
+.lbl{font-size:12px;color:var(--sub)}
+#mx{font-size:20px;font-weight:600;text-align:right}
+.bar{height:10px;border-radius:5px;background:var(--ln);margin:10px 0 8px;overflow:hidden}
+#fill{height:100%;width:0;border-radius:5px;transition:width .25s,background .25s}
+#chips{display:flex;gap:6px;overflow-x:auto;min-height:30px;scrollbar-width:none}
+#chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:none;background:var(--acbg);color:var(--ac);border-radius:15px;padding:6px 10px;font-size:13px}
+.hint{font-size:13px;color:var(--sub);padding:6px 0}
+#reset{border:1px solid var(--ln);background:none;color:var(--tx);border-radius:10px;padding:6px 12px;font-size:14px}
+main{padding:12px}
+details{background:var(--card);border-radius:14px;margin:0 0 12px;overflow:hidden}
+summary{list-style:none;padding:14px 16px;font-size:17px;font-weight:600;display:flex;justify-content:space-between}
+summary::-webkit-details-marker{display:none}
+summary .c{font-size:13px;color:var(--ac);font-weight:500}
+.grp{padding:0 16px 14px}
+.gn{font-size:13px;color:var(--sub);margin:4px 0 8px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.o{border:1.5px solid var(--ln);background:none;color:var(--tx);border-radius:12px;padding:10px;text-align:left;font-size:15px;min-height:56px}
+.o small{display:block;font-size:12px;color:var(--sub);margin-top:2px}
+.o.on{border-color:var(--ac);background:var(--acbg)}
+.o.on small{color:var(--ac)}
+.o.k small{color:#c79100;font-weight:600}
+.note{font-size:12px;color:var(--sub);padding:4px 16px 24px;line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+ <div class="row">
+  <div><div class="lbl">合算期待度</div><div id="res">-</div></div>
+  <div><div class="lbl" style="text-align:right">最も強い演出</div><div id="mx">-</div></div>
+ </div>
+ <div class="bar"><div id="fill"></div></div>
+ <div class="row" style="align-items:center">
+  <div id="chips"><span class="hint">演出をタップして選択</span></div>
+  <button id="reset">リセット</button>
+ </div>
+</header>
+<main id="list"></main>
+<div class="note">通常時・デフォルト設定の信頼度(一撃調べ)。合算は演出を独立と仮定した推定で高めに出やすく、「最も強い演出」が下限の目安です。基準確率 1/319.6。</div>
+<script>
+const BASE=1/319.6;
+const C=[
+{t:"先読み・保留",g:[
+ {n:"保留変化",o:[["青",19.4],["緑",27.9],["赤",86.7],["金",100],["リッタ【金】",98.0],["トランスポーク",49.5],["着替え",43.9]]},
+ {n:"ロゴフラッシュ",o:[["白",17.1],["赤",64.3],["金",87.4]]},
+ {n:"麗しき暴食亭",o:[["デフォルト",43.7],["大チャンス",78.6]]}]},
+{t:"予告",g:[
+ {n:"エリザベスコスプレ",o:[["猫耳",31.8],["サンタ",76.0],["水着",76.0],["金衣装",98.7],["キリン寝間着",100],["錆の騎士",100]]},
+ {n:"機種説明予告",o:[["チャンス",42.9],["激熱",99.6]]},
+ {n:"セリフ予告",o:[["赤→赤",33.0],["赤→金",78.4],["金→金",78.4],["金→虹",100]]},
+ {n:"継続回数表示",o:[["赤",36.1],["金",92.8]]},
+ {n:"群予告",o:[["変動開始時",93.3],["テンパイ直後",92.6],["SP中",100]]},
+ {n:"次回予告",o:[["発生",96.3]]},
+ {n:"オープニング",o:[["2期Ver.",2.1],["1期1話Ver.",81.8]]},
+ {n:"リーチライン",o:[["赤",35.2],["金",94.0]]},
+ {n:"発展時カットイン",o:[["ディアンヌ",84.6],["バン＆エレイン",94.2],["全員集合(虹)",100]]},
+ {n:"発展演出",o:[["傲慢発展",79.5],["全反撃",78.9],["マーリンチャンス",76.6]]}]},
+{t:"リーチ",g:[
+ {n:"リーチ種別",o:[["聖騎士",15.0],["捧げる覚悟",53.6],["七つの大罪",79.7],["罪状SP",65.8],["大罪集結SP",78.9]]},
+ {n:"大罪SP タイトル",o:[["赤",35.7],["金",100]]},
+ {n:"大罪SP 展開",o:[["原画カットイン",85.3],["神器開放ルート",92.0],["キリンギア",100]]},
+ {n:"罪状SP チャンスアップ(複数可)",m:1,o:[["シェイク",75.1],["原画カットイン",93.7],["キリンギア",100]]},
+ {n:"大罪集結SP チャンスアップ(複数可)",m:1,o:[["タイトル赤",78.5],["タイトルキリン",100],["テロップ赤",89.1],["当落文字赤",88.9],["当落文字キリン",100],["キリンギア",100]]}]}
+];
+let sel={},open={0:true};
+const od=p=>p/(1-p),$=id=>document.getElementById(id);
+const pct=v=>v>=100?"濃厚":v.toFixed(1)+"%";
+function color(p){return p>=1?"#d4a017":p>=.7?"#ff3b30":p>=.3?"#ff9500":"#8e8e93"}
+function calc(){
+ let o=od(BASE),n=0,sure=false,zero=false,mx=null,chips=[];
+ C.forEach((c,ci)=>c.g.forEach((g,gi)=>(sel[ci+"-"+gi]||[]).forEach(oi=>{
+  const r=g.o[oi];n++;chips.push([ci,gi,oi,g.n.replace("(複数可)","")+" "+r[0]]);
+  if(!mx||r[1]>mx[1])mx=r;
+  const p=r[1]/100;if(p>=1)sure=true;else if(p<=0)zero=true;else o*=od(p)/od(BASE)})));
+ const ch=$("chips");
+ if(!n){$("res").textContent="-";$("mx").textContent="-";$("fill").style.width="0";
+  ch.innerHTML='<span class="hint">演出をタップして選択</span>';return}
+ const p=sure?1:zero?0:o/(1+o);
+ $("res").textContent=sure?"濃厚":(p*100).toFixed(1)+"%";
+ $("res").style.color=color(p);
+ $("mx").textContent=pct(mx[1]);
+ $("fill").style.width=Math.max(p*100,2)+"%";$("fill").style.background=color(p);
+ ch.innerHTML="";
+ chips.forEach(([ci,gi,oi,t])=>{const b=document.createElement("button");b.className="chip";b.textContent=t+" ×";
+  b.onclick=()=>{const k=ci+"-"+gi;sel[k]=sel[k].filter(x=>x!==oi);render()};ch.appendChild(b)});
+}
+function render(){
+ const L=$("list");L.innerHTML="";
+ C.forEach((c,ci)=>{
+  const d=document.createElement("details");if(open[ci])d.open=true;
+  d.ontoggle=()=>open[ci]=d.open;
+  const cnt=c.g.reduce((a,g,gi)=>a+(sel[ci+"-"+gi]||[]).length,0);
+  d.innerHTML='<summary>'+c.t+'<span class="c">'+(cnt?cnt+"個選択":"")+'</span></summary>';
+  c.g.forEach((g,gi)=>{
+   const k=ci+"-"+gi,cur=sel[k]||[],w=document.createElement("div");w.className="grp";
+   w.innerHTML='<div class="gn">'+g.n+'</div><div class="opts"></div>';
+   g.o.forEach((r,oi)=>{const b=document.createElement("button");
+    b.className="o"+(cur.includes(oi)?" on":"")+(r[1]>=100?" k":"");
+    b.innerHTML=r[0]+"<small>"+(r[1]>=100?"大当たり濃厚":r[1].toFixed(1)+"%")+"</small>";
+    b.onclick=()=>{let x=sel[k]||[];x=x.includes(oi)?x.filter(v=>v!==oi):g.m?[...x,oi]:[oi];sel[k]=x;render()};
+    w.querySelector(".opts").appendChild(b)});
+   d.appendChild(w)});
+  L.appendChild(d)});
+ calc();
+}
+$("reset").onclick=()=>{sel={};render()};
+render();
+</script>
+</body>
+</html>
